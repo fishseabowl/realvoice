@@ -70,7 +70,7 @@ export default function BetPieChart({ yes, no }: BetPieChartProps) {
                     fill="#fff"
                     textAnchor="middle"
                     dominantBaseline="central"
-                    fontSize={12}
+                    fontSize={14}
                   >
                     {`${name}: ${(((value ?? 0) / total) * 100).toFixed(0)}%`}
                   </text>
