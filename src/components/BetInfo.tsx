@@ -1,19 +1,55 @@
+import { useState } from "react";
+
 interface BetInfoProps {
   options: { name: string; value: number }[];
+  onBet: (optionName: string, amount: number) => void;
 }
 
-export default function BetInfo({ options }: BetInfoProps) {
+export default function BetInfo({ options, onBet }: BetInfoProps) {
+  const [betAmounts, setBetAmounts] = useState<{ [key: string]: number }>({});
+
+  const handleInputChange = (name: string, value: string) => {
+    setBetAmounts((prev) => ({
+      ...prev,
+      [name]: parseInt(value, 10) || 0,
+    }));
+  };
+
+  const handleBet = (name: string) => {
+    const amount = betAmounts[name] || 0;
+    if (amount > 0) {
+      onBet(name, amount);
+      setBetAmounts((prev) => ({ ...prev, [name]: 0 })); // reset input
+    } else {
+      alert("Please enter a valid amount of STRK tokens.");
+    }
+  };
+
   return (
     <div className="mt-6 bg-gray-50 p-4 rounded-xl shadow-inner">
       <h2 className="text-lg font-semibold mb-3">Place your bet</h2>
-      <div className="grid gap-3">
+      <div className="grid gap-4">
         {options.map((o) => (
-          <button
+          <div
             key={o.name}
-            className="px-4 py-2 rounded bg-blue-100 hover:bg-blue-200 text-blue-800 font-medium transition"
+            className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm"
           >
-            Bet on {o.name}
-          </button>
+            <span className="font-medium">{o.name}</span>
+            <input
+              type="number"
+              min="0"
+              value={betAmounts[o.name] || ""}
+              onChange={(e) => handleInputChange(o.name, e.target.value)}
+              placeholder="STRK"
+              className="w-24 px-2 py-1 border rounded mr-2 text-sm"
+            />
+            <button
+              onClick={() => handleBet(o.name)}
+              className="px-3 py-1 rounded bg-blue-500 hover:bg-blue-600 text-white text-sm transition"
+            >
+              Bet
+            </button>
+          </div>
         ))}
       </div>
     </div>

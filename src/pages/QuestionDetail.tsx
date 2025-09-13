@@ -42,7 +42,13 @@ export default function QuestionDetail() {
       <h1 className="text-2xl font-bold mb-4">{q.question}</h1>
       {/* static chart on detail page */}
       <BetPieChart data={q.options} />
-      <BetInfo options={q.options} />
+      <BetInfo
+        options={q.options}
+        onBet={(optionName: string, amount: number) => {
+          // TODO: Implement bet logic here
+          console.log(`Bet placed on ${optionName} with amount ${amount}`);
+        }}
+      />
     </div>
   );
 }
