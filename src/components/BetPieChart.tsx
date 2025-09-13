@@ -6,7 +6,6 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { useEffect, useState } from "react";
 
 export type PieData = { name: string; value: number };
 
@@ -14,25 +13,22 @@ export type BetPieChartProps = {
   data: PieData[];
 };
 
-const COLORS = ["#16a34a", "#dc2626", "#3b82f6", "#f59e0b"];
+const COLORS = ["#16a34a", "#dc2626", "#3b82f6", "#f59e0b", "#facc15", "#8b5cf6", "#ec4899"];
 
 export default function BetPieChart({ data }: BetPieChartProps) {
-  const total = data.reduce((s, d) => s + Math.max(0, d.value), 0);
-  const [containerWidth, setContainerWidth] = useState(0);
+  const total = data.reduce((sum, d) => sum + Math.max(0, d.value), 0);
 
-  // Custom legend renderer
+  // Custom legend showing: name — votes (percentage%)
   const renderLegend = (props: any) => {
     const { payload } = props;
     return (
       <ul className="list-none p-0 m-0 flex flex-col justify-center">
         {payload.map((entry: any, index: number) => {
-          const percent =
-            total > 0 ? ((entry.value / total) * 100).toFixed(0) : "0";
+          const name = entry.payload.name;      // use payload.name
+          const value = entry.payload.value;    // use payload.value
+          const percent = total > 0 ? ((value / total) * 100).toFixed(0) : "0";
           return (
-            <li
-              key={`item-${index}`}
-              className="flex items-center mb-2 text-sm"
-            >
+            <li key={`item-${index}`} className="flex items-center mb-2 text-sm">
               <div
                 style={{
                   width: 12,
@@ -41,7 +37,7 @@ export default function BetPieChart({ data }: BetPieChartProps) {
                   marginRight: 8,
                 }}
               />
-              <span>{`${entry.value} votes (${percent}%) - ${entry.payload.name}`}</span>
+              <span>{`${name} — ${value} votes (${percent}%)`}</span>
             </li>
           );
         })}
@@ -49,49 +45,28 @@ export default function BetPieChart({ data }: BetPieChartProps) {
     );
   };
 
-  // Update container width to adjust pie size dynamically
-  useEffect(() => {
-    const handleResize = () => {
-      const el = document.getElementById("bet-piechart-container");
-      if (el) setContainerWidth(el.offsetWidth);
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Calculate outerRadius based on container width
-  const outerRadius = Math.min(80, containerWidth * 0.4);
+  const outerRadius = Math.max(50, 80 - data.length * 5);
 
   return (
-    <div id="bet-piechart-container" className="w-full h-64">
+    <div className="w-full h-64">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
             data={data}
             dataKey="value"
             nameKey="name"
-            cx="40%" // shift pie left to leave space for legend
+            cx="40%"
             cy="50%"
             outerRadius={outerRadius}
             innerRadius={outerRadius / 2}
-            isAnimationActive={true}
             labelLine={false}
-            label={({
-              value,
-              cx,
-              cy,
-              midAngle,
-              innerRadius,
-              outerRadius,
-            }) => {
+            isAnimationActive={true}
+            label={({ value, cx, cy, midAngle, innerRadius, outerRadius }) => {
               const RADIAN = Math.PI / 180;
               const radius = innerRadius + (outerRadius - innerRadius) / 2;
-              const safeMidAngle = midAngle ?? 0;
-              const x = cx + radius * Math.cos(-safeMidAngle * RADIAN);
-              const y = cy + radius * Math.sin(-safeMidAngle * RADIAN);
-              const percent =
-                total > 0 ? ((value ?? 0) / total * 100).toFixed(0) : "0";
+              const x = cx + radius * Math.cos(-midAngle * RADIAN);
+              const y = cy + radius * Math.sin(-midAngle * RADIAN);
+              const percent = total > 0 ? ((value ?? 0) / total * 100).toFixed(0) : "0";
               return (
                 <text
                   x={x}
@@ -107,10 +82,7 @@ export default function BetPieChart({ data }: BetPieChartProps) {
             }}
           >
             {data.map((_, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={COLORS[index % COLORS.length]}
-              />
+              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>
           <Tooltip formatter={(val: any) => [String(val), "Votes"]} />
