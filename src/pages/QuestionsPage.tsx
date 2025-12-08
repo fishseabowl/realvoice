@@ -1,42 +1,61 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import BetPieChart from "../components/BetPieChart";
-
-const questions = [
-  {
-    id: 1,
-    question: "Who will be the next mayor of New York City?",
-    options: [
-      { name: "Zohran Mamdani", value: 45 },
-      { name: "Scott M. Stringer", value: 30 },
-      { name: "Andrew Cuomo", value: 25 },
-    ],
-  },
-  {
-    id: 2,
-    question: "Will Bitcoin go up?",
-    options: [
-      { name: "Yes", value: 60 },
-      { name: "No", value: 40 },
-    ],
-  },
-];
 
 export default function QuestionsPage() {
   const navigate = useNavigate();
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch("http://localhost:3001/api/questions");
+        const data = await res.json();
+        setQuestions(data);
+      } catch (err) {
+        console.error("Failed to load questions:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  if (loading) return <div className="p-6">Loading...</div>;
 
   return (
-    <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-      {questions.map((q) => (
-        <div
-          key={q.id}
-          className="bg-white rounded-2xl shadow p-4 cursor-pointer hover:shadow-lg transition"
-          onClick={() => navigate(`/question/${q.id}`)}
+    <div className="p-6">
+
+      {/* --- Create Question Button --- */}
+      <div className="w-full flex justify-end mb-6">
+        <button
+          onClick={() => navigate("/create")}
+          className="px-4 py-2 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 transition"
         >
-          <h2 className="text-lg font-semibold mb-2">{q.question}</h2>
-          {/* pass q.options as `data` */}
-          <BetPieChart data={q.options} />
-        </div>
-      ))}
+          + Create Question
+        </button>
+      </div>
+
+      {/* --- Questions Grid --- */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {questions.map((q) => (
+          <div
+            key={q.id}
+            className="bg-white rounded-2xl shadow p-4 cursor-pointer hover:shadow-lg transition"
+            onClick={() => navigate(`/question/${q.id}`)}
+          >
+            <h2 className="text-lg font-semibold mb-2">{q.text}</h2>
+
+            <BetPieChart
+              data={q.options.map((opt: any) => ({
+                name: opt.name,
+                value: opt.value,
+              }))}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
