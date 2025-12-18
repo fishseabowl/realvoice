@@ -2,17 +2,27 @@ import { useState } from "react";
 
 interface BetInfoProps {
   options: { name: string; value: number }[];
-  onBet: (optionName: string, amount: number) => void;
+  onBet: (optionName: string, amount: number) => void | Promise<void>;
+  onAmountChange?: (betAmount: number) => void | Promise<void>;
 }
 
-export default function BetInfo({ options, onBet }: BetInfoProps) {
+export default function BetInfo({ options, onBet, onAmountChange }: BetInfoProps) {
   const [betAmounts, setBetAmounts] = useState<{ [key: string]: number }>({});
 
   const handleInputChange = (name: string, value: string) => {
+    const parsed = parseInt(value, 10) || 0;
     setBetAmounts((prev) => ({
       ...prev,
-      [name]: parseInt(value, 10) || 0,
+      [name]: parsed,
     }));
+
+    if (onAmountChange) {
+      try {
+        onAmountChange(parsed);
+      } catch (err) {
+        // ignore async handler errors here; caller can handle logging
+      }
+    }
   };
 
   const handleBet = (name: string) => {

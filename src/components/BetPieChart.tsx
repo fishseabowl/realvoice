@@ -23,23 +23,34 @@ const COLORS = [
   "#ec4899",
 ];
 
+const NO_VOTES_COLOR = "#d1d5db"; // gray-300
+
 export default function BetPieChart({ data }: BetPieChartProps) {
   const total = data.reduce((sum, d) => sum + Math.max(0, d.value), 0);
 
-  // Custom legend showing: name — votes (percentage%)
+  // -------- NEW: All options but equal values when no votes --------
+  const noVotes = total === 0;
+
+  const displayData = noVotes
+    ? data.map((d) => ({ ...d, value: 1 })) // equal slices
+    : data;
+
+  const colors = noVotes
+    ? data.map(() => NO_VOTES_COLOR)
+    : data.map((_, i) => COLORS[i % COLORS.length]);
+  // ----------------------------------------------------------------
+
   const renderLegend = (props: any) => {
     const { payload } = props;
     return (
       <ul className="list-none p-0 m-0 flex flex-col justify-center">
         {payload.map((entry: any, index: number) => {
-          const name = entry.payload.name; // use payload.name
-          const value = entry.payload.value; // use payload.value
+          const name = entry.payload.name;
+          const value = entry.payload.value;
           const percent = total > 0 ? ((value / total) * 100).toFixed(0) : "0";
+
           return (
-            <li
-              key={`item-${index}`}
-              className="flex items-center mb-2 text-sm"
-            >
+            <li key={index} className="flex items-center mb-2 text-sm">
               <div
                 style={{
                   width: 12,
@@ -48,7 +59,11 @@ export default function BetPieChart({ data }: BetPieChartProps) {
                   marginRight: 8,
                 }}
               />
-              <span>{`${name} — ${value} votes (${percent}%)`}</span>
+              <span>
+                {noVotes
+                  ? `${name} — 0 votes (0%)`
+                  : `${name} — ${value} votes (${percent}%)`}
+              </span>
             </li>
           );
         })}
@@ -63,23 +78,26 @@ export default function BetPieChart({ data }: BetPieChartProps) {
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
-            data={data}
+            data={displayData}
             dataKey="value"
             nameKey="name"
             cx="40%"
             cy="50%"
             outerRadius={outerRadius}
-            innerRadius={outerRadius / 2}
+            innerRadius={noVotes ? 0 : outerRadius / 2}
             labelLine={false}
             isAnimationActive={true}
             label={({ value, cx, cy, midAngle, innerRadius, outerRadius }) => {
+              if (noVotes) return null; // Do not show % if no votes
+
               const RADIAN = Math.PI / 180;
-              const radius = innerRadius + (outerRadius - innerRadius) / 2;
               const safeMidAngle = midAngle ?? 0;
+              const radius = innerRadius + (outerRadius - innerRadius) / 2;
               const x = cx + radius * Math.cos(-safeMidAngle * RADIAN);
               const y = cy + radius * Math.sin(-safeMidAngle * RADIAN);
               const percent =
                 total > 0 ? (((value ?? 0) / total) * 100).toFixed(0) : "0";
+
               return (
                 <text
                   x={x}
@@ -94,14 +112,18 @@ export default function BetPieChart({ data }: BetPieChartProps) {
               );
             }}
           >
-            {data.map((_, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={COLORS[index % COLORS.length]}
-              />
+            {displayData.map((_, index) => (
+              <Cell key={index} fill={colors[index]} />
             ))}
           </Pie>
-          <Tooltip formatter={(val: any) => [String(val), "Votes"]} />
+
+          <Tooltip
+            formatter={(v, _name, entry: any) => {
+              if (noVotes) return ["0", entry.payload.name];
+              return [String(v), "Votes"];
+            }}
+          />
+
           <Legend
             layout="vertical"
             verticalAlign="middle"
