@@ -27,16 +27,6 @@ export default function QuestionsPage() {
   return (
     <div className="p-6">
 
-      {/* --- Create Question Button --- */}
-      <div className="w-full flex justify-end mb-6">
-        <button
-          onClick={() => navigate("/create")}
-          className="px-4 py-2 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 transition"
-        >
-          + Create Question
-        </button>
-      </div>
-
       {/* --- Questions Grid --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {questions.map((q) => (

@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function CreateQuestionPage() {
   const [text, setText] = useState("");
-  const [options, setOptions] = useState([""]);
-  const [expiredAt, setExpiredAt] = useState("");
+  const [options, setOptions] = useState<string[]>(["", ""]);
+  const navigate = useNavigate();
 
   function updateOption(index: number, value: string) {
     const copy = [...options];
@@ -15,70 +16,59 @@ export default function CreateQuestionPage() {
     setOptions([...options, ""]);
   }
 
-  async function create() {
-    const cleanOptions = options.filter((o) => o.trim().length > 0);
-
-    const res = await fetch("http://localhost:3001/api/questions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text,
-        options: cleanOptions,
-        expired_at: expiredAt || null,
-      }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      alert(data.error);
+  async function submit() {
+    if (!text || options.some(o => !o)) {
+      alert("Please fill all fields");
       return;
     }
 
-    alert("Question created!");
-    window.location.href = "/";
+    const res = await fetch("http://localhost:3001/api/admin/questions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, options }),
+    });
+
+    if (res.ok) {
+      alert("Question created");
+      navigate("/admin");
+    } else {
+      alert("Failed to create question");
+    }
   }
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
+    <div className="p-8 max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">Create Question</h1>
 
-      <label className="font-semibold">Question Text</label>
       <input
-        className="border p-2 w-full mb-4"
+        className="w-full border p-3 rounded mb-4"
+        placeholder="Question text"
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
 
-      <label className="font-semibold">Expire Time (optional)</label>
-      <input
-        type="datetime-local"
-        className="border p-2 w-full mb-4"
-        value={expiredAt}
-        onChange={(e) => setExpiredAt(e.target.value)}
-      />
-
-      <h3 className="font-semibold mb-2">Options</h3>
-
-      {options.map((opt, i) => (
-        <input
-          key={i}
-          className="border p-2 w-full mb-2"
-          value={opt}
-          onChange={(e) => updateOption(i, e.target.value)}
-        />
-      ))}
+      <div className="space-y-2">
+        {options.map((opt, i) => (
+          <input
+            key={i}
+            className="w-full border p-3 rounded"
+            placeholder={`Option ${i + 1}`}
+            value={opt}
+            onChange={(e) => updateOption(i, e.target.value)}
+          />
+        ))}
+      </div>
 
       <button
-        className="bg-gray-500 text-white px-4 py-2 rounded mt-2"
         onClick={addOption}
+        className="mt-4 px-4 py-2 rounded bg-gray-200"
       >
-        + Add Option
+        + Add option
       </button>
 
       <button
-        className="bg-blue-600 text-white px-4 py-2 rounded mt-4"
-        onClick={create}
+        onClick={submit}
+        className="ml-4 px-4 py-2 rounded bg-blue-600 text-white"
       >
         Create
       </button>
