@@ -1,17 +1,14 @@
-"use client";
-
-import dynamic from "next/dynamic";
+import type { ReactNode } from "react";
 import { useAccount, useBalance } from "@starknet-react/core";
 import SideNav from "./SideNav";
-
-const WalletBar = dynamic(() => import("./WalletBar"), { ssr: false });
+import WalletBar from "./WalletBar";
 
 interface WalletLayoutProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export default function WalletLayout({ children }: WalletLayoutProps) {
-  const { address: userAddress, account: userAccount } = useAccount();
+  const { address } = useAccount();
 
   const {
     isLoading,
@@ -21,18 +18,18 @@ export default function WalletLayout({ children }: WalletLayoutProps) {
   } = useBalance({
     token:
       "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
-    address: userAddress,
+    address,
     watch: true,
   });
 
   return (
-    <div className="h-screen flex">
+    <div className="h-screen flex bg-gray-100">
       {/* Sidebar */}
-      <SideNav onSelect={() => {}} />
+      <SideNav />
 
-      {/* Main */}
-      <div className="flex-1 relative flex flex-col items-center">
-        {/* Wallet Bar */}
+      {/* Main content */}
+      <div className="flex-1 relative ml-32">
+        {/* WalletBar */}
         <div className="absolute top-4 right-4 z-50">
           <WalletBar />
         </div>
@@ -40,21 +37,34 @@ export default function WalletLayout({ children }: WalletLayoutProps) {
         {/* Balance */}
         <div className="absolute top-[4.5rem] right-4 z-40">
           {isLoading && <p>Loading balance...</p>}
-          {isError && <p>Error: {error?.message}</p>}
+
+          {isError && (
+            <p className="text-red-500">
+              Error: {error?.message}
+            </p>
+          )}
+
           {!isLoading && !isError && balanceData && (
-            <div className="p-3 bg-white border border-black text-blue-600">
+            <div className="p-3 bg-white border border-black rounded shadow text-blue-600">
               <p>Token: {balanceData.symbol}</p>
               <p>
-                Balance: {Number(balanceData.formatted).toFixed(8)}
+                Balance:{" "}
+                {Number(balanceData.formatted).toFixed(8)}
               </p>
             </div>
           )}
+
+          {!address && (
+            <p className="text-gray-500">
+              Connect wallet to see balance
+            </p>
+          )}
         </div>
 
-        {/* Page Content */}
-        <div className="w-full h-full pt-20 px-6">
+        {/* Page */}
+        <main className="pt-20 px-6 h-full overflow-auto">
           {children}
-        </div>
+        </main>
       </div>
     </div>
   );

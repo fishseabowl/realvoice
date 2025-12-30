@@ -1,38 +1,53 @@
-// components/SideNav.tsx
-const SideNav: React.FC<{ onSelect: (page: string) => void }> = ({
-  onSelect,
-}) => {
+import { NavLink } from "react-router-dom";
+
+const base =
+  "block px-2 py-1 rounded transition text-left";
+const active =
+  "bg-gray-700 text-white";
+const inactive =
+  "text-gray-300 hover:bg-gray-800";
+
+export default function SideNav() {
   return (
     <div className="w-32 h-full bg-gray-900 text-white p-4 fixed left-0 top-0">
-      <h2 className="text-xl font-bold">RealVoice</h2>
-      <ul className="mt-4 space-y-2">
+      <h2 className="text-xl font-bold mb-4">
+        PolyIChain
+      </h2>
+
+      <ul className="space-y-2">
         <li>
-          <button
-            onClick={() => onSelect("home")}
-            className="block px-2 py-1 w-full text-left"
+          <NavLink
+            to="/"
+            className={({ isActive }) =>
+              `${base} ${isActive ? active : inactive}`
+            }
           >
             Home
-          </button>
+          </NavLink>
         </li>
+
         <li>
-          <button
-            onClick={() => onSelect("prediction")}
-            className="block px-2 py-1 w-full text-left"
+          <NavLink
+            to="/prediction"
+            className={({ isActive }) =>
+              `${base} ${isActive ? active : inactive}`
+            }
           >
             Prediction
-          </button>
+          </NavLink>
         </li>
+
         <li>
-          <button
-            onClick={() => onSelect("question")}
-            className="block px-2 py-1 w-full text-left"
+          <NavLink
+            to="/questions"
+            className={({ isActive }) =>
+              `${base} ${isActive ? active : inactive}`
+            }
           >
-            Question
-          </button>
+            Questions
+          </NavLink>
         </li>
       </ul>
     </div>
   );
-};
-
-export default SideNav;
+}

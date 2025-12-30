@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import WalletLayout from "../components/WalletLayout";
 import BetPieChart from "../components/BetPieChart";
 import BetInfo from "../components/BetInfo";
 
@@ -10,16 +11,16 @@ export default function QuestionDetail() {
   const [question, setQuestion] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // 🧠 AI advice state
   const [advice, setAdvice] = useState<string | null>(null);
   const [riskLevel, setRiskLevel] = useState<string | null>(null);
   const [loadingAdvice, setLoadingAdvice] = useState(false);
 
-  // Fetch question
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch(`http://localhost:3001/api/questions/${id}`);
+        const res = await fetch(
+          `http://localhost:3001/api/questions/${id}`
+        );
         const data = await res.json();
         setQuestion(data);
       } catch (err) {
@@ -31,142 +32,114 @@ export default function QuestionDetail() {
     load();
   }, [id]);
 
-  // 🧠 Fetch AI advice
   async function fetchAdvice(betAmount: number) {
     if (!question || betAmount <= 0) {
       setAdvice(null);
+      setRiskLevel(null);
       return;
     }
 
     try {
       setLoadingAdvice(true);
-
-      const res = await fetch("http://localhost:3001/api/advice", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topic: question.question,
-          betAmount,
-        }),
-      });
+      const res = await fetch(
+        "http://localhost:3001/api/advice",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            topic: question.question,
+            betAmount,
+          }),
+        }
+      );
 
       const data = await res.json();
       setAdvice(data.aiAdvice);
       setRiskLevel(data.riskLevel);
-    } catch (err) {
-      console.error("AI advice error:", err);
-      setAdvice("AI advisor is temporarily unavailable.");
+    } catch {
+      setAdvice("AI advisor unavailable.");
     } finally {
       setLoadingAdvice(false);
     }
   }
 
-  // Handle bet
   async function handleBet(optionName: string, amount: number) {
     if (!question) return;
 
-    const selectedOption = question.options.find(
-      (opt: any) => opt.name === optionName
+    const option = question.options.find(
+      (o: any) => o.name === optionName
     );
+    if (!option) return alert("Option not found");
 
-    if (!selectedOption) {
-      alert("Option not found.");
-      return;
-    }
+    const res = await fetch("http://localhost:3001/api/bets", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        questionId: question.id,
+        optionId: option.id,
+        amount,
+      }),
+    });
 
-    try {
-      const res = await fetch("http://localhost:3001/api/bets", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          questionId: question.id,
-          optionId: selectedOption.id,
-          amount,
-        }),
-      });
+    const data = await res.json();
+    if (!res.ok) return alert(data.error);
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.error || "Bet failed");
-        return;
-      }
-
-      const updatedOptions = question.options.map((opt: any) =>
-        opt.id === data.option.id ? { ...opt, value: data.option.value } : opt
-      );
-
-      setQuestion({ ...question, options: updatedOptions });
-
-      alert("Bet placed successfully!");
-    } catch (err) {
-      console.error("Bet error:", err);
-      alert("Failed to place bet.");
-    }
+    setQuestion({
+      ...question,
+      options: question.options.map((o: any) =>
+        o.id === data.option.id ? data.option : o
+      ),
+    });
   }
 
-  if (loading) return <div className="p-6">Loading...</div>;
-  if (!question) return <div className="p-6">Question not found</div>;
+  if (loading) {
+    return (
+      <WalletLayout>
+        <div>Loading...</div>
+      </WalletLayout>
+    );
+  }
+
+  if (!question) {
+    return (
+      <WalletLayout>
+        <div>Question not found</div>
+      </WalletLayout>
+    );
+  }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <button
-        onClick={() => navigate("/")}
-        className="mb-4 px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600"
-      >
-        ← Back
-      </button>
+    <WalletLayout>
+      <div className="max-w-5xl mx-auto">
+        <button
+          onClick={() => navigate(-1)}
+          className="mb-4 px-4 py-2 bg-blue-500 text-white rounded"
+        >
+          ← Back
+        </button>
 
-      <h1 className="text-2xl font-bold mb-4">{question.question}</h1>
+        <h1 className="text-2xl font-bold mb-4">
+          {question.question}
+        </h1>
 
-      <BetPieChart data={question.options} />
+        <BetPieChart data={question.options} />
 
-      {/* 🧠 AI Advisor Panel */}
-      <div className="mt-6 p-4 rounded-xl border bg-gray-50">
-        <h3 className="font-semibold mb-2">
-          🤖 AI Market Advisor
-          {riskLevel && (
-            <span
-              className={`ml-2 text-xs px-2 py-1 rounded ${
-                riskLevel === "low"
-                  ? "bg-green-100 text-green-700"
-                  : riskLevel === "medium"
-                  ? "bg-yellow-100 text-yellow-700"
-                  : "bg-red-100 text-red-700"
-              }`}
-            >
-              {riskLevel.toUpperCase()} RISK
-            </span>
-          )}
-        </h3>
+        {/* AI Advisor */}
+        <div className="mt-6 p-4 rounded border bg-gray-50">
+          <h3 className="font-semibold mb-2">
+            🤖 AI Market Advisor
+          </h3>
 
-        {loadingAdvice && (
-          <p className="text-sm text-gray-500">Analyzing your bet...</p>
-        )}
+          {loadingAdvice && <p>Analyzing...</p>}
+          {!loadingAdvice && advice && <p>{advice}</p>}
+        </div>
 
-        {!loadingAdvice && advice && (
-          <p className="text-sm text-gray-700 whitespace-pre-line">
-            {advice}
-          </p>
-        )}
-
-        {!loadingAdvice && !advice && (
-          <p className="text-sm text-gray-400">
-            Enter a bet amount to receive AI advice.
-          </p>
-        )}
-
-        <p className="text-xs text-gray-400 mt-2">
-          AI advice is informational only and not financial advice.
-        </p>
+        <BetInfo
+          options={question.options}
+          onBet={handleBet}
+          onAmountChange={fetchAdvice}
+        />
       </div>
-
-      {/* Pass AI trigger to BetInfo */}
-      <BetInfo
-        options={question.options}
-        onBet={handleBet}
-        onAmountChange={fetchAdvice}
-      />
-    </div>
+    </WalletLayout>
   );
 }
