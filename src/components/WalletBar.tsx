@@ -1,4 +1,3 @@
-"use client";
 import { useAccount, useConnect, useDisconnect } from "@starknet-react/core";
 import { Button } from "./ui/Button";
 

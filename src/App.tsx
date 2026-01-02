@@ -1,4 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import WalletLayout from "./components/WalletLayout";
+
 import QuestionsPage from "./pages/QuestionsPage";
 import QuestionDetail from "./pages/QuestionDetail";
 import CreateQuestionPage from "./pages/CreateQuestionPage";
@@ -9,14 +11,17 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        {/* User routes */}
-        <Route path="/" element={<QuestionsPage />} />
-        <Route path="/question/:id" element={<QuestionDetail />} />
+        {/* Layout wrapper */}
+        <Route element={<WalletLayout />}>
+          {/* User routes */}
+          <Route path="/" element={<QuestionsPage />} />
+          <Route path="/question/:id" element={<QuestionDetail />} />
 
-        {/* Admin routes */}
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/create" element={<CreateQuestionPage />} />
-        <Route path="/admin/manage" element={<ManageQuestionsPage />} />
+          {/* Admin routes */}
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/create" element={<CreateQuestionPage />} />
+          <Route path="/admin/manage" element={<ManageQuestionsPage />} />
+        </Route>
       </Routes>
     </Router>
   );

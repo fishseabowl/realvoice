@@ -11,9 +11,7 @@ export default function AdminDashboard() {
           className="p-6 rounded-2xl shadow bg-white hover:shadow-lg transition"
         >
           <h2 className="text-xl font-semibold mb-2">➕ Create Question</h2>
-          <p className="text-gray-600">
-            Add a new prediction market question.
-          </p>
+          <p className="text-gray-600">Add a new prediction market question.</p>
         </Link>
 
         <Link
@@ -21,9 +19,7 @@ export default function AdminDashboard() {
           className="p-6 rounded-2xl shadow bg-white hover:shadow-lg transition"
         >
           <h2 className="text-xl font-semibold mb-2">📊 Manage Questions</h2>
-          <p className="text-gray-600">
-            Close questions and set winners.
-          </p>
+          <p className="text-gray-600">Close questions and set winners.</p>
         </Link>
       </div>
     </div>

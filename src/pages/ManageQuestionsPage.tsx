@@ -5,7 +5,7 @@ export default function ManageQuestionsPage() {
 
   useEffect(() => {
     fetch("http://localhost:3001/api/questions")
-      .then(res => res.json())
+      .then((res) => res.json())
       .then(setQuestions);
   }, []);
 
@@ -23,7 +23,7 @@ export default function ManageQuestionsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ optionId }),
-      }
+      },
     );
     location.reload();
   }
@@ -32,15 +32,10 @@ export default function ManageQuestionsPage() {
     <div className="p-8 max-w-5xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Manage Questions</h1>
 
-      {questions.map(q => (
-        <div
-          key={q.id}
-          className="mb-6 p-6 rounded-2xl bg-white shadow"
-        >
+      {questions.map((q) => (
+        <div key={q.id} className="mb-6 p-6 rounded-2xl bg-white shadow">
           <h2 className="font-semibold text-lg mb-2">{q.text}</h2>
-          <p className="text-sm text-gray-500 mb-2">
-            Status: {q.status}
-          </p>
+          <p className="text-sm text-gray-500 mb-2">Status: {q.status}</p>
 
           <div className="space-y-2">
             {q.options.map((opt: any) => (

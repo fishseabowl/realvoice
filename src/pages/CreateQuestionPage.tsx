@@ -17,7 +17,7 @@ export default function CreateQuestionPage() {
   }
 
   async function submit() {
-    if (!text || options.some(o => !o)) {
+    if (!text || options.some((o) => !o)) {
       alert("Please fill all fields");
       return;
     }

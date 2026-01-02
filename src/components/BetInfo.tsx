@@ -6,7 +6,11 @@ interface BetInfoProps {
   onAmountChange?: (betAmount: number) => void | Promise<void>;
 }
 
-export default function BetInfo({ options, onBet, onAmountChange }: BetInfoProps) {
+export default function BetInfo({
+  options,
+  onBet,
+  onAmountChange,
+}: BetInfoProps) {
   const [betAmounts, setBetAmounts] = useState<{ [key: string]: number }>({});
 
   const handleInputChange = (name: string, value: string) => {
