@@ -2,11 +2,11 @@
 import type { ReactNode } from "react";
 
 import { sepolia } from "@starknet-react/chains";
+import { RpcProvider } from "starknet";
 import {
   StarknetConfig,
   argent,
   braavos,
-  publicProvider,
   useInjectedConnectors,
   voyager,
 } from "@starknet-react/core";
@@ -20,10 +20,20 @@ export function StarknetProvider({ children }: { children: ReactNode }) {
     // Randomize the order of the connectors.
     order: "random",
   });
+
+  const myProvider = new RpcProvider({
+  nodeUrl: 'https://api.zan.top/public/starknet-sepolia/rpc/v0_10',
+  });
+
+  function providerFactory(chain: any) {
+  // You can add logic here to return different providers based on the chain
+  return myProvider;
+ }
+
   return (
     <StarknetConfig
       chains={[sepolia]}
-      provider={publicProvider()}
+      provider={providerFactory}
       connectors={connectors}
       explorer={voyager}
     >
