@@ -11,7 +11,7 @@ export default function SideNav() {
   return (
     <div className="w-32 h-full bg-gray-900 text-white p-4 fixed left-0 top-0">
       <h2 className="text-xl font-bold mb-4">
-        PolyIChain
+        RealVoice
       </h2>
 
       <ul className="space-y-2">
@@ -28,12 +28,12 @@ export default function SideNav() {
 
         <li>
           <NavLink
-            to="/prediction"
+            to="/"
             className={({ isActive }) =>
               `${base} ${isActive ? active : inactive}`
             }
           >
-            Prediction
+            Question List
           </NavLink>
         </li>
 
@@ -44,7 +44,7 @@ export default function SideNav() {
               `${base} ${isActive ? active : inactive}`
             }
           >
-            Questions
+            Bets
           </NavLink>
         </li>
       </ul>
