@@ -25,7 +25,7 @@ export function StarknetProvider({ children }: { children: ReactNode }) {
   nodeUrl: 'https://api.zan.top/public/starknet-sepolia/rpc/v0_10',
   });
 
-  function providerFactory(chain: any) {
+  function providerFactory(_chain: any) {
   // You can add logic here to return different providers based on the chain
   return myProvider;
  }

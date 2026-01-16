@@ -1,11 +1,14 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useAccount } from "@starknet-react/core";
 import WalletLayout from "../components/WalletLayout";
 import BetPieChart from "../components/BetPieChart";
 import BetInfo from "../components/BetInfo";
 
 export default function QuestionDetail() {
   const { id } = useParams();
+  const { address } = useAccount();
+
   const navigate = useNavigate();
 
   const [question, setQuestion] = useState<any>(null);
