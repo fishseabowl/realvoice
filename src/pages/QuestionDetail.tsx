@@ -8,7 +8,6 @@ import BetInfo from "../components/BetInfo";
 export default function QuestionDetail() {
   const { id } = useParams();
   const { address } = useAccount();
-
   const navigate = useNavigate();
 
   const [question, setQuestion] = useState<any>(null);
@@ -18,22 +17,24 @@ export default function QuestionDetail() {
   const [riskLevel, setRiskLevel] = useState<string | null>(null);
   const [loadingAdvice, setLoadingAdvice] = useState(false);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch(
-          `http://localhost:3001/api/questions/${id}`
-        );
-        const data = await res.json();
-        setQuestion(data);
-      } catch (err) {
-        console.error("Failed to load question:", err);
-      } finally {
-        setLoading(false);
-      }
+  async function loadQuestion() {
+    try {
+      const res = await fetch(
+        `http://localhost:3001/api/questions/${id}?userId=${address || ""}`
+      );
+      const data = await res.json();
+      setQuestion(data);
+    } catch (err) {
+      console.error("Failed to load question:", err);
+    } finally {
+      setLoading(false);
     }
-    load();
-  }, [id]);
+  }
+
+  useEffect(() => {
+    loadQuestion();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, address]);
 
   async function fetchAdvice(betAmount: number) {
     if (!question || betAmount <= 0) {
@@ -44,17 +45,14 @@ export default function QuestionDetail() {
 
     try {
       setLoadingAdvice(true);
-      const res = await fetch(
-        "http://localhost:3001/api/advice",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            topic: question.question,
-            betAmount,
-          }),
-        }
-      );
+      const res = await fetch("http://localhost:3001/api/advice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic: question.question,
+          betAmount,
+        }),
+      });
 
       const data = await res.json();
       setAdvice(data.aiAdvice);
@@ -67,12 +65,23 @@ export default function QuestionDetail() {
   }
 
   async function handleBet(optionName: string, amount: number) {
-    if (!question) return;
+    if (!address) {
+      alert("Please connect your wallet first.");
+      return;
+    }
+
+    if (!question || question.status !== "open") {
+      alert("Betting is closed.");
+      return;
+    }
 
     const option = question.options.find(
       (o: any) => o.name === optionName
     );
-    if (!option) return alert("Option not found");
+    if (!option) {
+      alert("Option not found");
+      return;
+    }
 
     const res = await fetch("http://localhost:3001/api/bets", {
       method: "POST",
@@ -80,19 +89,22 @@ export default function QuestionDetail() {
       body: JSON.stringify({
         questionId: question.id,
         optionId: option.id,
+        userId: address,
         amount,
       }),
     });
 
     const data = await res.json();
-    if (!res.ok) return alert(data.error);
+    if (!res.ok) {
+      alert(data.error || "Bet failed");
+      return;
+    }
 
-    setQuestion({
-      ...question,
-      options: question.options.map((o: any) =>
-        o.id === data.option.id ? data.option : o
-      ),
-    });
+    // Reload full question to refresh:
+    // - option totals
+    // - user summary
+    // - bet history
+    loadQuestion();
   }
 
   if (loading) {
@@ -125,7 +137,51 @@ export default function QuestionDetail() {
           {question.question}
         </h1>
 
+        {question.status !== "open" && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+            Betting is closed
+          </div>
+        )}
+
         <BetPieChart data={question.options} />
+
+        {/* Bet Summary */}
+        {address && question.userTotalBet > 0 && (
+          <div className="mt-6 p-4 border rounded bg-gray-50">
+            <h3 className="font-semibold mb-2">
+              Your Bets (Summary)
+            </h3>
+
+            {question.options.map((o: any) => (
+              <div key={o.id}>
+                {o.name}: {question.userBetsByOption[o.id] || 0}
+              </div>
+            ))}
+
+            <div className="mt-2 font-medium">
+              Total Bet: {question.userTotalBet}
+            </div>
+          </div>
+        )}
+
+        {/* Bet History */}
+        {address && question.userBetHistory?.length > 0 && (
+          <div className="mt-6 p-4 border rounded bg-white">
+            <h3 className="font-semibold mb-2">Bet History</h3>
+            <ul className="text-sm space-y-1">
+              {question.userBetHistory.map((b: any) => (
+                <li key={b.id} className="flex justify-between">
+                  <span>
+                    {b.optionName} — {b.amount}
+                  </span>
+                  <span className="text-gray-500">
+                    {new Date(b.time).toLocaleString()}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* AI Advisor */}
         <div className="mt-6 p-4 rounded border bg-gray-50">
@@ -135,12 +191,18 @@ export default function QuestionDetail() {
 
           {loadingAdvice && <p>Analyzing...</p>}
           {!loadingAdvice && advice && <p>{advice}</p>}
+          {!loadingAdvice && riskLevel && (
+            <p className="mt-1 text-sm text-gray-600">
+              Risk level: {riskLevel}
+            </p>
+          )}
         </div>
 
         <BetInfo
           options={question.options}
           onBet={handleBet}
           onAmountChange={fetchAdvice}
+          disabled={question.status !== "open" || !address}
         />
       </div>
     </WalletLayout>
